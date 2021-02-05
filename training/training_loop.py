@@ -7,6 +7,7 @@
 """Main training script."""
 
 import numpy as np
+from dnnlib.comet_utils import CometLogger
 import tensorflow as tf
 import dnnlib
 import dnnlib.tflib as tflib
@@ -131,11 +132,20 @@ def training_loop(
     resume_pkl              = None,     # Network pickle to resume training from, None = train from scratch.
     resume_kimg             = 0.0,      # Assumed training progress at the beginning. Affects reporting and training schedule.
     resume_time             = 0.0,      # Assumed wallclock time at the beginning. Affects reporting.
-    resume_with_new_nets    = False):   # Construct new networks according to G_args and D_args before resuming training?
-
-    # Initialize dnnlib and TensorFlow.
+    resume_with_new_nets    = False,    # Construct new networks according to G_args and D_args before resuming training?
+    comet_key               ='',        #Comet key
+    comet_projectname       ='',        #Comet project name
+    comet_workspace         =''):       #Comet workspace name
+    # Initialize dnnlib,TensorFlow and comet.ml
     tflib.init_tf(tf_config)
     num_gpus = dnnlib.submit_config.num_gpus
+    cometlogger=CometLogger(comet_key,comet_projectname,comet_workspace)
+
+    #Log Hyperparameters
+    hyper_params={'G_smoothing_kimg':G_smoothing_kimg,'minibatch_repeats':minibatch_repeats,'lazy_regularization':lazy_regularization,
+                    'G_reg_interval':G_reg_interval,'D_reg_interval':D_reg_interval,'reset_opt_for_new_lod':reset_opt_for_new_lod,
+                    'total_kimg':total_kimg,'mirror_augment':mirror_augment}
+    cometlogger.log_parameters(hyper_params)
 
     # Load training set.
     training_set = dataset.load_dataset(data_dir=dnnlib.convert_path(data_dir), verbose=True, **dataset_args)
