@@ -7,6 +7,7 @@
 """Main training script."""
 
 import numpy as np
+from dnnlib.comet_utils import CometLogger
 import tensorflow as tf
 import dnnlib
 import dnnlib.tflib as tflib
@@ -133,15 +134,18 @@ def training_loop(
     resume_time             = 0.0,      # Assumed wallclock time at the beginning. Affects reporting.
     resume_with_new_nets    = False):   # Construct new networks according to G_args and D_args before resuming training?
 
-    # Initialize dnnlib and TensorFlow.
+    # Initialize dnnlib,TensorFlow and comet.ml
     tflib.init_tf(tf_config)
     num_gpus = dnnlib.submit_config.num_gpus
+    comet_config='./comet_config.json'
+    cometlogger=CometLogger(comet_config)
 
     # Load training set.
     training_set = dataset.load_dataset(data_dir=dnnlib.convert_path(data_dir), verbose=True, **dataset_args)
     grid_size, grid_reals, grid_labels = misc.setup_snapshot_image_grid(training_set, **grid_args)
     misc.save_image_grid(grid_reals, dnnlib.make_run_dir_path('reals.png'), drange=training_set.dynamic_range, grid_size=grid_size)
-
+    cometlogger.log_image(dnnlib.make_run_dir_path('reals.png'), 'Real Samples')
+    
     # Construct or load networks.
     with tf.device('/gpu:0'):
         if resume_pkl is None or resume_with_new_nets:
@@ -161,6 +165,7 @@ def training_loop(
     grid_latents = np.random.randn(np.prod(grid_size), *G.input_shape[1:])
     grid_fakes = Gs.run(grid_latents, grid_labels, is_validation=True, minibatch_size=sched.minibatch_gpu)
     misc.save_image_grid(grid_fakes, dnnlib.make_run_dir_path('fakes_init.png'), drange=drange_net, grid_size=grid_size)
+    cometlogger.log_image(dnnlib.make_run_dir_path('fakes_init.png'), 'Initial Fakes')
 
     # Setup training inputs.
     print('Building TensorFlow graph...')
@@ -331,13 +336,15 @@ def training_loop(
             autosummary('Timing/total_hours', total_time / (60.0 * 60.0))
             autosummary('Timing/total_days', total_time / (24.0 * 60.0 * 60.0))
 
-            # Save snapshots.
+            #Save snapshots.
             if image_snapshot_ticks is not None and (cur_tick % image_snapshot_ticks == 0 or done):
                 grid_fakes = Gs.run(grid_latents, grid_labels, is_validation=True, minibatch_size=sched.minibatch_gpu)
                 misc.save_image_grid(grid_fakes, dnnlib.make_run_dir_path('fakes%06d.png' % (cur_nimg // 1000)), drange=drange_net, grid_size=grid_size)
+                cometlogger.log_image(dnnlib.make_run_dir_path('fakes%06d.png' % (cur_nimg // 1000)), 'fake')
             if network_snapshot_ticks is not None and (cur_tick % network_snapshot_ticks == 0 or done):
                 pkl = dnnlib.make_run_dir_path('network-snapshot-%06d.pkl' % (cur_nimg // 1000))
                 misc.save_pkl((G, D, Gs), pkl)
+                cometlogger.log_model(pkl)
                 metrics.run(pkl, run_dir=dnnlib.make_run_dir_path(), data_dir=dnnlib.convert_path(data_dir), num_gpus=num_gpus, tf_config=tf_config)
 
             # Update summaries and RunContext.
