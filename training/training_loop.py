@@ -139,8 +139,7 @@ def training_loop(
     tflib.init_tf(tf_config)
     num_gpus = dnnlib.submit_config.num_gpus
     if comet:
-        comet_config='./comet_config.json'
-        cometlogger=CometLogger(comet_config)
+        cometlogger=CometLogger()
 
     # Load training set.
     training_set = dataset.load_dataset(data_dir=dnnlib.convert_path(data_dir), verbose=True, **dataset_args)
