@@ -3,10 +3,8 @@ import tensorflow as tf
 import json
 
 class CometLogger():
-    def __init__(self,comet_config):
-        with open(comet_config, "r") as content:
-            content=json.load(content)
-            self.experiment = Experiment(content['api_key'],content['project_name'],content['workspace'])
+    def __init__(self):
+            self.experiment = Experiment()
 
     #Logging parameters
     def log_parameters(self,hyper_parameters):
