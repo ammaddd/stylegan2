@@ -142,7 +142,8 @@ python run_training.py --num-gpus=8 --data-dir=~/datasets --config=config-f \
 For other configurations, see `python run_training.py --help`.
 
 run_training.py supports logging of weights, hyperparameters, losses. If you wan't to use it add --comet=true .
-Make sure to configure comet.ml (Get configuration details from https://www.comet.ml/)
+Make sure to configure comet.ml. You can get more information on Comet configuration options from:
+[comet.ml/docs/python-sdk/advanced/](https://www.comet.ml/docs/python-sdk/advanced/#python-configuration)
 ```
 export COMET_API_KEY=""
 export COMET_PROJECT_NAME=""
