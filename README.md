@@ -141,6 +141,14 @@ python run_training.py --num-gpus=8 --data-dir=~/datasets --config=config-f \
 
 For other configurations, see `python run_training.py --help`.
 
+run_training.py supports logging of weights, hyperparameters, losses. If you wan't to use it add --comet=true .
+Make sure to configure comet.ml (Get configuration details from https://www.comet.ml/)
+```
+export COMET_API_KEY=""
+export COMET_PROJECT_NAME=""
+export COMET_WORKSPACE=""
+``` 
+
 We have verified that the results match the paper when training with 1, 2, 4, or 8 GPUs. Note that training FFHQ at 1024&times;1024 resolution requires GPU(s) with at least 16 GB of memory. The following table lists typical training times using NVIDIA DGX-1 with 8 Tesla V100 GPUs:
 
 | Configuration | Resolution      | Total kimg | 1 GPU   | 2 GPUs  | 4 GPUs  | 8 GPUs | GPU mem |
