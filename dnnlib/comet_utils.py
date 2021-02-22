@@ -4,6 +4,7 @@ try:
 except:
     comet_installed = False
 
+
 class CometLogger():
     def __init__(self):
         global comet_installed
